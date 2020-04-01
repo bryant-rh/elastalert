@@ -1,0 +1,236 @@
+# Alert when the rate of events exceeds a threshold
+
+# (Optional)
+# Elasticsearch host
+# es_host: elasticsearch.example.com
+
+# (Optional)
+# Elasticsearch port
+# es_port: 14900
+
+# (OptionaL) Connect with SSL to Elasticsearch
+#use_ssl: True
+
+# (Optional) basic-auth username and password for Elasticsearch
+#es_username: someusername
+#es_password: somepassword
+
+# (Required)
+# Rule name, must be unique
+name: Example frequency rule
+
+# (Required)
+# Type of alert.
+# the frequency rule type alerts when num_events events occur with timeframe time
+type: frequency
+
+aggregation:
+#  "* * * * *" means: run as the "run_every" in config.yaml
+  schedule: "* * * * *"
+aggregate_by_match_time: true
+
+# (Required)
+# Index to search, wildcard supported
+index: dev-test-*
+
+# (Required, frequency specific)
+# Alert when this many documents matching the query occur within a timeframe
+num_events: 5
+
+# (Required, frequency specific)
+# num_events must occur within this amount of time to trigger an alert
+timeframe:
+  #hours: 4
+  minutes: 1
+
+# (Required)
+# A list of Elasticsearch filters used for find events
+# These filters are joined with AND and nested in a filtered query
+# For more info: http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl.html
+filter:
+#- term:
+#    some_field: "some_value"
+#逻辑组合
+#- bool:
+#    #必须存在
+#    must:
+#      - match:
+#          stream: "stderr"
+    #必须不存在，即过滤掉的
+#    must_not:
+#      - match:
+#          stackTrace: "org.apache.catalina.connector.ClientAbortException: java.io.IOException: Broken pipe"
+#      - match:    
+#          message: "[SUCCESS]"
+- query:
+    query_string:
+      query: "stream: stderr"
+
+## 用来区分报警，跟 realert 配合使用，在这里意味着，
+## 5 分钟内如果有重复报警，那么当 name 不同时，会当做不同的报警处理，可以是数组
+#query_key:
+#  - name
+#
+## 5 分钟内相同的报警不会重复发送
+#realert:
+#  minutes: 5
+#
+## 指数级扩大 realert 时间，中间如果有报警，
+## 则按照 5 -> 10 -> 20 -> 40 -> 60 不断增大报警时间到制定的最大时间，
+## 如果之后报警减少，则会慢慢恢复原始 realert 时间
+#exponential_realert:
+#  hours: 1
+#
+## 根据报警的内，将相同的报警安装 name 来聚合
+#aggregation_key: stream
+#
+## 聚合报警的内容，只展示 name 与 message
+#summary_table_fields:
+#  - stream
+#  - message
+
+
+#mail配置
+smtp_host: smtp.exmail.qq.com
+smtp_port: 25
+smtp_auth_file: /etc/elastalert/smtp_auth.yaml
+#回复给哪个邮箱
+email_reply_to: wangruihua@cechealth.cn
+###从哪个邮箱发送
+from_addr:  alarm@cechealth.cn
+# (Required)
+# The alert is use when a match is found
+alert:
+- "email"
+
+email_format: html
+
+# (required, email specific)
+# a list of email addresses to send alerts to
+email:
+- "wangruihua@cechealth.cn"
+
+alert_subject: "[LOGFIRING:{}] at {}"
+alert_subject_args:
+  - num_hits
+  - _index
+
+alert_text_type: alert_text_only
+# 下面这个是自己配置的
+alert_text: | 
+  <div style='display:block;background-color: red;padding: 10px;border-radius: 5px;color: white;font-weight: bold;'>
+    <p>{}</p>
+  </div>
+  <br>
+  <a href='http://172.16.63.5:5601/app/kibana#/discover?_g=()&_a=(columns:!(_source),index:AW0aL4dSjz2pc3vzzDfX,interval:auto,query:(match_all:()),sort:!(' @timestamp ',desc))' target='_blank' style='padding: 8px 16px;background-color: #46bc99;text-decoration:none;color: white;border-radius: 5px;'>Click to Kibana</a>
+  <br>
+  <h3>告警详情</h3>
+  <table>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>@timestamp:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>_index:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>kubernetes.node.name:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>kubernetes.namespace:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>kubernetes.pod.name:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>kubernetes.container.name:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>appVersion:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>business:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>category:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>geoip:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>guid:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>host:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>message:</td>
+      <td style='padding:10px 5px;border-radius: 5px;background-color: red;color: white;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>num_hits:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>num_matches:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>path:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>server:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>uid:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>uri:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+    <tr>
+      <td style='padding:5px;text-align: right;font-weight: bold;border-radius: 5px;background-color: #eef;'>userAgent:</td>
+      <td style='padding:5px;border-radius: 5px;background-color: #eef;'>{}</td></tr>
+  </table>
+ # 这里需要配置area_text中出现的各个字段，其实跟sprintf一样按照顺序格式化的
+alert_text_args:
+ - message
+ - "@timestamp"
+ - _index
+ - kubernetes.node.name
+ - kubernetes.namespace
+ - kubernetes.pod.name
+ - kubernetes.container.name
+ - _type
+ - appType
+ - appVersion
+ - business
+ - category
+ - geoip
+ - guid
+ - host
+ - message
+ - num_hits
+ - num_matches
+ - path
+ - server
+ - uid
+ - uri
+ - userAgent
+
+#alert_text: |
+#  你好，服务器({})可能正在受到web攻击，请采取手段阻止！！！！
+#  ### 截止发邮件前匹配到的请求数：{}
+#  > 发生时间: {}
+#  > timestamp: {} + 08:00
+#  > attacker's ip: {}
+#  > request: {}
+#  > message: {}
+#  > UA头: {}
+#  >>> 参考来源：{}
+#
+#alert_text_args:
+#  - host
+#  - num_hits
+#  - time
+#  - "@timestamp"
+#  - remote_addr
+#  - request
+#  - message
+#  - http_user_agent
+#  - source

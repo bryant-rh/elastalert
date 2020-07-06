@@ -66,9 +66,9 @@ smtp_host: smtp.exmail.qq.com
 smtp_port: 25
 smtp_auth_file: /etc/elastalert/smtp_auth.yaml
 #回复给哪个邮箱
-email_reply_to: wangruihua@cechealth.cn
+email_reply_to: wangruihua@example.cn
 ###从哪个邮箱发送
-from_addr:  alarm@cechealth.cn
+from_addr:  alarm@example.cn
 # (Required)
 # The alert is use when a match is found
 alert:
@@ -79,7 +79,7 @@ email_format: html
 # (required, email specific)
 # a list of email addresses to send alerts to
 email:
-- "wangruihua@cechealth.cn"
+- "wangruihua@example.cn"
 
 alert_subject: "[LOGFIRING:{}] at {}"
 alert_subject_args:

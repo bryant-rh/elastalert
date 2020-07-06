@@ -110,7 +110,7 @@ email_format: html
 # (required, email specific)
 # a list of email addresses to send alerts to
 ema
-#- "wangruihua@cechealth.cn"
+#- "wangruihua@example.cn"
 - "operation@cec"
 
 alert_subject: "[Mysql-SlowLog-FIRING:{}] 近2minutes发现mysql出现慢日志数量[{}]条,请及时查看！！！"
